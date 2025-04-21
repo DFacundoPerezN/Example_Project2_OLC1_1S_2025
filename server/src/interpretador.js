@@ -1,8 +1,12 @@
-// Tabla de símbolos
-const tablaSimbolos = new Map();
+const { Contexto } = require("./context");
+const { evaluar } = require("./evaluador");
+const errores = require("./errores");
 
-// Lista de errores
-const errores = [];
+// Contexto inicial/global
+const contextoGlobal = new Contexto();
+
+// Tabla de símbolos
+const tablaSimbolos = contextoGlobal.tablaSimbolos;
 
 // Consola de salida
 let consola = "";
@@ -14,7 +18,7 @@ function interpretar(instrucciones) {
   
     try {
       for (const instr of instrucciones) {
-        ejecutar(instr);
+        ejecutar(instr, contextoGlobal);
       }
     } catch (err) {
       errores.push({ tipo: "Interno", descripcion: err.message });
@@ -31,18 +35,11 @@ function interpretar(instrucciones) {
     };
   }
 
-  function ejecutar(instr) {
+  function ejecutar(instr, context) {
     switch (instr.tipo) {
-      case "DECLARACION":
-        if (tablaSimbolos.has(instr.id)) {
-          errores.push({
-            tipo: "Semántico",
-            descripcion: `Variable ${instr.id} ya declarada`
-          });
-          return;
-        }
-        const valDecl = evaluar(instr.valor);
-        tablaSimbolos.set(instr.id, { tipo: instr.tipoDato, valor: valDecl });
+      case "DECLARACION":       
+        const valDecl = evaluar(instr.valor, context.tablaSimbolos);
+        context.addSimbolo(instr.id, instr.tipoDato, instr.valor);
         break;
   
       case "ASIGNACION":
@@ -53,12 +50,12 @@ function interpretar(instrucciones) {
           });
           return;
         }
-        const valAsignado = evaluar(instr.valor);
+        const valAsignado = evaluar(instr.valor, context.tablaSimbolos);
         tablaSimbolos.get(instr.id).valor = valAsignado;
         break;
   
       case "IMPRIMIR":
-        const valImp = evaluar(instr.valor);
+        const valImp = evaluar(instr.valor, context.tablaSimbolos);
         consola += valImp + "\n";
         break;
 
@@ -94,70 +91,5 @@ function interpretar(instrucciones) {
         });    
     }
   }
-  function evaluar(expr) {
-    switch (expr.tipo) {
-      case "NUMERO":
-        return expr.valor;
-  
-      case "CADENA":
-        return expr.valor;
-      
-      case "BOOLEANO":
-        return expr.valor === "verdadero" ;
 
-      case "ID":
-        if (!tablaSimbolos.has(expr.nombre)) {
-          errores.push({
-            tipo: "Semántico",
-            descripcion: `Variable ${expr.nombre} no declarada`
-          });
-          return null;
-        }
-        return tablaSimbolos.get(expr.nombre).valor;
-  
-      case "SUMA":
-        if (expr.izquierda.tipo === "CADENA" || expr.derecha.tipo === "CADENA") {
-          return `${evaluar(expr.izquierda)}${evaluar(expr.derecha)}`;
-        }
-        if (expr.izquierda.tipo === "BOOLEANO" || expr.derecha.tipo === "BOOLEANO") {
-          return evaluar(expr.izquierda) + evaluar(expr.derecha);
-        }
-        return evaluar(expr.izquierda) + evaluar(expr.derecha);
-      case "RESTA":
-        if (expr.izquierda.tipo === "BOOLEANO" || expr.derecha.tipo === "BOOLEANO") {
-          return evaluar(expr.izquierda) - evaluar(expr.derecha);
-        }
-        return evaluar(expr.izquierda) - evaluar(expr.derecha);
-        
-      case "MULT":
-        return evaluar(expr.izquierda) * evaluar(expr.derecha);
-      case "DIV":
-        return evaluar(expr.izquierda) / evaluar(expr.derecha);
-        
-      case "VALOR_LISTA":
-        if (!tablaSimbolos.has(expr.id)) {
-          errores.push({
-            tipo: "Semántico",
-            descripcion: `Lista ${expr.id} no declarada`
-          });
-          return null;
-        }
-        const lista = tablaSimbolos.get(expr.id).valor;
-        console.log(lista, expr.indice);
-        if (expr.indice < 0 || expr.indice >= lista.length) {
-          errores.push({
-            tipo: "Semántico",
-            descripcion: `Índice: ${expr.indice} fuera de rango para la lista ${expr.id}`
-          });
-          return null;
-        }
-        return evaluar(lista[expr.indice.valor]);
-      default:
-        errores.push({
-          tipo: "Interno",
-          descripcion: `Expresión desconocida: ${JSON.stringify(expr)}`
-        });
-        return null;
-    }
-  }
 module.exports = interpretar;

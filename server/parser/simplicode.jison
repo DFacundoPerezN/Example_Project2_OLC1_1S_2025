@@ -13,6 +13,10 @@
 "->"                          return 'ASIGNAR';
 "="                          return 'IGUAL';
 "imprimir"                    return 'IMPRIMIR';
+"mientras"                  return 'MIENTRAS';
+"hacer"                      return 'HACER';
+"fin"                         return 'FIN';
+"si"                          return 'SI';
 [0-9]+                        return 'NUMERO';
 "8"                          return 'NUMERO';
 "verdadero"                   return 'VERDADERO';
@@ -96,6 +100,14 @@ instruccion
     | valor_lista IGUAL expresion
         { console.log("asignar valor lista", $1, $3);
             $$ = { tipo: 'ASIGNACION_VALOR_LISTA', id: $1.id, indice: $1.indice, valor: $3 }; }
+    | flujos
+        { $$ = $1; }
+    ;
+
+flujos
+    : 'MIENTRAS' expresion 'HACER' sentencias 'FIN' 'MIENTRAS'
+        { console.log("flujo", $2, $4);
+            $$ = { tipo: 'MIENTRAS', condicion: $2, sentencias: $4 }; }
     ;
 
 ingresar_lista
