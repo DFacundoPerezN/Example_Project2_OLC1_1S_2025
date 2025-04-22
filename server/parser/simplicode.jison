@@ -10,6 +10,7 @@
 "cadena"                      return 'TIPO_CADENA';
 "Cadena"                    return 'TIPO_CADENA';
 "booleano"                    return 'TIPO_BOOLEANO';
+"Booleano"                    return 'TIPO_BOOLEANO';
 "->"                          return 'ASIGNAR';
 "="                          return 'IGUAL';
 "imprimir"                    return 'IMPRIMIR';
@@ -22,6 +23,7 @@
 "verdadero"                   return 'VERDADERO';
 "falso"                      return 'FALSO';
 "Lista"                     return 'LISTA';
+"objeto"                    return 'OBJETO';
 \"[^"]*\"                     return 'CADENA';
 //IDENTIFICADORES
 [a-zA-Z_][a-zA-Z0-9_]*        return 'ID';
@@ -35,6 +37,7 @@
 "["                           return '[';
 "]"                           return ']';
 ","                           return ',';
+"."                           return '.';
 ";"                           return ';';
 \n                            return 'NEWLINE';
 <<EOF>>                       return 'EOF';
@@ -100,8 +103,38 @@ instruccion
     | valor_lista IGUAL expresion
         { console.log("asignar valor lista", $1, $3);
             $$ = { tipo: 'ASIGNACION_VALOR_LISTA', id: $1.id, indice: $1.indice, valor: $3 }; }
+    | def_objeto
+        {  $$ = $1; }
+    | ing_objeto
+        { $$ = $1; }
     | flujos
         { $$ = $1; }
+    ;
+
+def_objeto
+    : 'OBJETO' 'ID' '(' separador lista_atributos ')'
+        { console.log("def objeto", $2, $4);
+            $$ = { tipo: 'DEF_OBJETO', id: $2, atributos: $5 }; }
+    ;
+
+lista_atributos :
+    'ID' tipo separador lista_atributos
+        { $$ = [{ id: $1, tipo: $2 }].concat($4); }
+    | 'ID' tipo separador
+        { $$ = [{ id: $1, tipo: $2 }]; }
+    ;
+    
+ing_objeto
+    : 'INGRESAR' 'OBJETO' 'ID' 'ID' 'ASIGNAR' 'ID' '(' separador lista_ingresar ')'
+        { console.log("ingresar objeto", $3, $4, $9);
+            $$ = { tipo: 'INGRESAR_OBJETO', tipoObjeto: $3, id: $4, atributos: $9 }; }
+        
+    ;
+lista_ingresar
+    : expresion ',' separador lista_ingresar
+        { $$ = [$1].concat($4) ; } // (1 ,2,3 )
+    | expresion separador
+        { $$ = [$1]; } // (2)
     ;
 
 flujos
@@ -146,6 +179,8 @@ expresion
     | NUMERO
         { $$ = { tipo: 'NUMERO', valor: Number($1) }; }
     | ID        { $$ = { tipo: 'ID', nombre: $1 }; }
+    | ID '.' ID 
+        { $$ = { tipo: 'VALOR_OBJETO', id: $1, atributo: $3 }; }
     | CADENA
         { $$ = { tipo: 'CADENA', valor: $1.slice(1, -1) }; }
     | valor_lista
@@ -153,10 +188,20 @@ expresion
     | booleano
         { $$ = $1; }
     ;
+
 booleano 
     :   VERDADERO
         { console.log("booleano", $1);
             $$ = { tipo: 'BOOLEANO', valor: 'verdadero' }; }
     | FALSO
         { $$ = { tipo: 'BOOLEANO', valor: 'falso' }; }
+    ;
+
+tipo 
+    : TIPO_ENTERO
+        { $$ = 'entero'; }
+    | TIPO_CADENA
+        { $$ = 'cadena'; }
+    | TIPO_BOOLEANO
+        { $$ = 'booleano'; }
     ;

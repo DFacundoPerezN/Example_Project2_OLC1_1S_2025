@@ -8,6 +8,9 @@ const contextoGlobal = new Contexto();
 // Tabla de símbolos
 const tablaSimbolos = contextoGlobal.tablaSimbolos;
 
+//Diccionario de objetos
+const diccionarioObjetos = new Map();
+
 // Consola de salida
 let consola = "";
 
@@ -84,6 +87,23 @@ function interpretar(instrucciones) {
         tablaSimbolos.set(instr.id, { tipo: "LISTA", valor: lista });
         break;
 
+      case "DEF_OBJETO":
+        diccionarioObjetos.set(instr.id, instr.atributos);
+        break;
+
+      case "INGRESAR_OBJETO":
+        const nombresAtributos = diccionarioObjetos.get(instr.tipoObjeto); 
+        const valoresAtributos = instr.atributos;
+        console.log(instr.atributos ); 
+        valor = {};
+        for (let i = 0; i < nombresAtributos.length; i++) {
+          const nombre = nombresAtributos[i].id; 
+          valor[nombre] = valoresAtributos[i];
+        }
+        console.log("valores", valor);       
+        context.tablaSimbolos.set(instr.id, { tipo: instr.tipoObjeto, valor: valor });
+
+      break;
       default:
         errores.push({
           tipo: "Sintáctico",

@@ -66,6 +66,10 @@ function evaluar(expr, tablaSimbolos) {
         }
         return evaluar(lista[expr.indice.valor], tablaSimbolos);
 
+      case "VALOR_OBJETO":
+        const objeto = tablaSimbolos.get(expr.id).valor;
+        return evaluar(objeto[expr.atributo], tablaSimbolos);
+        
       default:
         errores.push({
           tipo: "Interno", 
