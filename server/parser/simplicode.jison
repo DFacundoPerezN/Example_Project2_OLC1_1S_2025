@@ -32,6 +32,7 @@
 "*"                           return '*';
 "/"                           return '/';
 "%"                           return '%';
+"<"                           return '<';
 "("                           return '(';
 ")"                           return ')';
 "["                           return '[';
@@ -51,6 +52,7 @@
 %left '+' '-'
 %left '*' '/'
 %left '%'
+%left '<'
 
 
 %start programa
@@ -139,9 +141,17 @@ lista_ingresar
 
 flujos
     : 'MIENTRAS' expresion 'HACER' sentencias 'FIN' 'MIENTRAS'
-        { console.log("flujo", $2, $4);
-            $$ = { tipo: 'MIENTRAS', condicion: $2, sentencias: $4 }; }
+        { console.log("mientras", $2, $4);
+            $$ = { tipo: 'CICLO_MIENTRAS', condicion: $2, sentencias: $4 }; }
+    | si
+        { $$ = $1; }
     ;
+
+si 
+    : 'SI' expresion 'HACER' sentencias 'FIN' 'SI'
+        { console.log("si ", $2, $4);
+            $$ = { tipo: 'SI', condicion: $2, sentencias: $4 }; }
+;
 
 ingresar_lista
     : 'INGRESAR' 'LISTA' '(' expresion ',' 'TIPO_ENTERO' ')' 'ID' 'ASIGNAR'  '(' lista ')'
@@ -176,6 +186,8 @@ expresion
         { $$ = { tipo: 'DIVISION', izquierda: $1, derecha: $3 }; }
     | expresion '%' expresion
         { $$ = { tipo: 'MODULO', izquierda: $1, derecha: $3 }; }
+    | expresion '<' expresion
+        { $$ = { tipo: 'MENOR', izquierda: $1, derecha: $3 }; }
     | NUMERO
         { $$ = { tipo: 'NUMERO', valor: Number($1) }; }
     | ID        { $$ = { tipo: 'ID', nombre: $1 }; }

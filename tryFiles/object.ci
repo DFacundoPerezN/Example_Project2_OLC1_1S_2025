@@ -1,0 +1,16 @@
+objeto  Carro (
+         color  Cadena
+         modelo Cadena
+         convertible Booleano
+         velocidad Entero
+)
+
+ingresar objeto Carro nuevoCarro -> Carro(
+         "rosado",
+         "mazda 2009",
+         falso,
+         0
+)
+
+imprimir nuevoCarro.color
+imprimir nuevoCarro.velocidad

@@ -1,6 +1,7 @@
 const errores = require('./errores');
 
-function evaluar(expr, tablaSimbolos) {
+function evaluar(expr, contexto) {
+   const tablaSimbolos = contexto.tablaSimbolos;
     switch (expr.tipo) {
       case "NUMERO":
         return expr.valor;
@@ -12,40 +13,34 @@ function evaluar(expr, tablaSimbolos) {
         return expr.valor == "verdadero" ? "verdadero" : "falso";
 
       case "ID":
-        //console.log(expr.nombre, tablaSimbolos);
-        if (!tablaSimbolos.has(expr.nombre)) {
-          errores.push({
-            tipo: "Semántico",
-            descripcion: `Variable ${expr.nombre} no declarada`
-          });
-          return null;
-        }
-        return tablaSimbolos.get(expr.nombre).valor;
+        //console.log(expr.nombre, contexto);
+        const simbolo = contexto.getSimbolo(expr.nombre);
+        return simbolo.valor;
   
       case "SUMA":
         if (expr.izquierda.tipo === "CADENA" || expr.derecha.tipo === "CADENA") {
-          return `${evaluar(expr.izquierda, tablaSimbolos)}${evaluar(expr.derecha, tablaSimbolos)}`;
+          return `${evaluar(expr.izquierda, contexto)}${evaluar(expr.derecha, contexto)}`;
         }
         if (expr.izquierda.tipo === "BOOLEANO" || expr.derecha.tipo === "BOOLEANO") {
-          return evaluar(expr.izquierda, tablaSimbolos) + evaluar(expr.derecha, tablaSimbolos);
+          return evaluar(expr.izquierda, contexto) + evaluar(expr.derecha, contexto);
         }
-        return evaluar(expr.izquierda, tablaSimbolos) + evaluar(expr.derecha, tablaSimbolos);
+        return evaluar(expr.izquierda, contexto) + evaluar(expr.derecha, contexto);
       case "RESTA":
         if (expr.izquierda.tipo === "BOOLEANO" || expr.derecha.tipo === "BOOLEANO") {
-          return evaluar(expr.izquierda, tablaSimbolos) - evaluar(expr.derecha, tablaSimbolos);
+          return evaluar(expr.izquierda, contexto) - evaluar(expr.derecha, contexto);
         }
-        return evaluar(expr.izquierda, tablaSimbolos) - evaluar(expr.derecha, tablaSimbolos);
+        return evaluar(expr.izquierda, contexto) - evaluar(expr.derecha, contexto);
         
       case "MULT":
-        return evaluar(expr.izquierda, tablaSimbolos) * evaluar(expr.derecha, tablaSimbolos);
+        return evaluar(expr.izquierda, contexto) * evaluar(expr.derecha, contexto);
       case "DIV":
-        return evaluar(expr.izquierda, tablaSimbolos) / evaluar(expr.derecha, tablaSimbolos);
+        return evaluar(expr.izquierda, contexto) / evaluar(expr.derecha, contexto);
 
       case "MODULO":
-        return evaluar(expr.izquierda, tablaSimbolos) % evaluar(expr.derecha, tablaSimbolos);
+        return evaluar(expr.izquierda, contexto) % evaluar(expr.derecha, contexto);
 
       case "MENOR":
-        return evaluar(expr.izquierda, tablaSimbolos) < evaluar(expr.derecha, tablaSimbolos);
+        return evaluar(expr.izquierda, contexto) < evaluar(expr.derecha, contexto);
         
       case "VALOR_LISTA":
         if (!tablaSimbolos.has(expr.id)) {
@@ -64,11 +59,12 @@ function evaluar(expr, tablaSimbolos) {
           });
           return null;
         }
-        return evaluar(lista[expr.indice.valor], tablaSimbolos);
+        indice = evaluar(expr.indice, contexto);
+        return evaluar(lista[indice], contexto);
 
       case "VALOR_OBJETO":
         const objeto = tablaSimbolos.get(expr.id).valor;
-        return evaluar(objeto[expr.atributo], tablaSimbolos);
+        return evaluar(objeto[expr.atributo], contexto);
         
       default:
         errores.push({

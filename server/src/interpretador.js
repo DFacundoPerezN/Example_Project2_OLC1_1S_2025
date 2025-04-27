@@ -41,36 +41,29 @@ function interpretar(instrucciones) {
   function ejecutar(instr, context) {
     switch (instr.tipo) {
       case "DECLARACION":       
-        const valDecl = evaluar(instr.valor, context.tablaSimbolos);
-        context.addSimbolo(instr.id, instr.tipoDato, instr.valor);
+        const valDecl = evaluar(instr.valor, context);
+        context.addSimbolo(instr.id, instr.tipoDato, valDecl);
         break;
   
-      case "ASIGNACION":
-        if (!tablaSimbolos.has(instr.id)) {
-          errores.push({
-            tipo: "Semántico",
-            descripcion: `Variable ${instr.id} no declarada`
-          });
-          return;
-        }
-        const valAsignado = evaluar(instr.valor, context.tablaSimbolos);
-        tablaSimbolos.get(instr.id).valor = valAsignado;
+      case "ASIGNACION":       
+        const valAsignado = evaluar(instr.valor, context);
+        context.updateSimbolo(instr.id, valAsignado);
         break;
   
       case "IMPRIMIR":
-        const valImp = evaluar(instr.valor, context.tablaSimbolos);
+        const valImp = evaluar(instr.valor, context);
         consola += valImp + "\n";
         break;
 
       case "INGRESAR_LISTA":
-        if (tablaSimbolos.has(instr.id)) {
-          errores.push({
-            tipo: "Semántico",
-            descripcion: `Variable ${instr.id} ya declarada`
-          });
-          return;
-        }
-        tablaSimbolos.set(instr.id, { tipo: "LISTA", valor: instr.lista });
+        // if (context.tablaSimbolos.has(instr.id)) {
+        //   errores.push({
+        //     tipo: "Semántico",
+        //     descripcion: `Variable ${instr.id} ya declarada`
+        //   });
+        //   return;
+        // }
+        context.tablaSimbolos.set(instr.id, { tipo: "LISTA", valor: instr.lista });
         break;
   
       case "ASIGNACION_VALOR_LISTA":
@@ -84,7 +77,7 @@ function interpretar(instrucciones) {
         }
         let indice = evaluar(instr.indice);
         lista[indice] = instr.valor;
-        tablaSimbolos.set(instr.id, { tipo: "LISTA", valor: lista });
+        context.tablaSimbolos.set(instr.id, { tipo: "LISTA", valor: lista });
         break;
 
       case "DEF_OBJETO":
@@ -102,7 +95,29 @@ function interpretar(instrucciones) {
         }
         console.log("valores", valor);       
         context.tablaSimbolos.set(instr.id, { tipo: instr.tipoObjeto, valor: valor });
-
+      break;
+      case 'CICLO_MIENTRAS':
+        const contextoCiclo = new Contexto(context);
+        let condicion = evaluar(instr.condicion, contextoCiclo);
+        //console.log("Condicion", condicion); 
+        while (condicion == "verdadero" || condicion == true) {
+          for (const instrCiclo of instr.sentencias) {
+            ejecutar(instrCiclo, contextoCiclo);
+          }
+          condicion = evaluar(instr.condicion, contextoCiclo); 
+          //console.log("Condicion", condicion);
+        }
+      break;
+      case 'SI':
+        const contextoSi = new Contexto(context);
+        let condicionSi = evaluar(instr.condicion, contextoSi);
+        if( condicionSi == "verdadero" || condicionSi == true) {
+          for (const instrCiclo of instr.sentencias) {
+            ejecutar(instrCiclo, contextoSi);
+          }
+        }
+        
+        /** Agregar De lo contrario y o si */
       break;
       default:
         errores.push({

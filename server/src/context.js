@@ -1,5 +1,5 @@
 const { errores } = require("./errores");
-const { evaluar } = require("./evaluador");
+//const { evaluar } = require("./evaluador");
 
 class Contexto {
   constructor(anterior) {
@@ -15,8 +15,8 @@ class Contexto {
         });
         return;
     }
-    const valDecl = evaluar(valor, this.tablaSimbolos);
-    this.tablaSimbolos.set(id, { tipo: tipo, valor: valDecl });
+    //const valDecl = evaluar(valor, this.tablaSimbolos);
+    this.tablaSimbolos.set(id, { tipo: tipo, valor: valor });
   }
 
   getSimbolo(id) {
@@ -27,6 +27,28 @@ class Contexto {
       }
       contextoTemportal = contextoTemportal.anterior;
     }
+    console.log("No se encontró la variable en el contexto actual");
+    errores.push({
+      tipo: "Semántico",
+      descripcion: `Variable ${id} no declarada`
+    });
+  }
+
+  updateSimbolo(id, valor) {
+    let contextoTemportal = this;
+    while (contextoTemportal != null) {
+      if (contextoTemportal.tablaSimbolos.has(id)) {        
+        contextoTemportal.tablaSimbolos.get(id).valor = valor;
+        return;
+      }
+      contextoTemportal = contextoTemportal.anterior;
+    }
+    console.log("No se encontró la variable en el contexto actual");
+    errores.push({
+      tipo: "Semántico",
+      descripcion: `Variable ${id} no declarada`
+    });
+    return;
   }
 }  
 

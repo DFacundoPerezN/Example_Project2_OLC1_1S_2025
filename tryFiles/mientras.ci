@@ -1,0 +1,17 @@
+ingresar cambiante como entero con valor 3
+mientras cambiante < 4 hacer
+ imprimir cambiante
+ cambiante -> cambiante +7
+fin mientras
+
+ingresar x como entero con valor 0
+ ingresar y como entero con valor 0
+mientras x < 4 hacer
+ y -> 2
+ mientras y < 4 hacer
+  imprimir y + "," + cambiante
+  y -> y+1
+ fin mientras
+ x -> x +1
+fin mientras
+imprimir "y:" + y
