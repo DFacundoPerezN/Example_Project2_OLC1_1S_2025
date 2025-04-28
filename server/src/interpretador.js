@@ -116,9 +116,58 @@ function interpretar(instrucciones) {
             ejecutar(instrCiclo, contextoSi);
           }
         }
-        
-        /** Agregar De lo contrario y o si */
       break;
+        /** Agregar De lo contrario y o si */
+      case 'DEFINIR_PROCEDIMIENTO':
+        if(contextoGlobal.tablaSimbolos.has(instr.id)) {
+          errores.push({
+            tipo: "Semántico",
+            descripcion: `Procedimiento ${instr.id} ya declarado`
+          });
+          return;
+        }
+        contextoGlobal.tablaSimbolos.set(instr.id, { tipo: "PROCEDIMIENTO", valor: instr.sentencias, parametros: instr.parametros });
+      break;
+
+      case 'LLAMAR_FUNCION':
+      case 'LLAMAR_PROCEDIMIENTO':
+        const procedimiento = context.getSimbolo(instr.id);
+        const contextoProcedimiento = new Contexto(contextoGlobal);
+        //console.log("Procedimiento", procedimiento);
+        if(!procedimiento) {
+          errores.push({
+            tipo: "Semántico",
+            descripcion: `Procedimiento ${instr.id} no declarado`
+          });
+          return;
+        }
+        if(procedimiento.parametros){
+          for (let i = 0; i < procedimiento.parametros.length; i++) {
+            const parametro = procedimiento.parametros[i];
+            //console.log(instr);
+            const valorParam = evaluar(instr.parametros[i], context);
+            contextoProcedimiento.addSimbolo(parametro.id, parametro.tipo , valorParam);
+          }
+        }
+        for(const instraProc of procedimiento.valor) {
+          ejecutar(instraProc, contextoProcedimiento);
+        }
+      break;
+      case 'DEFINIR_FUNCION':
+        if(contextoGlobal.tablaSimbolos.has(instr.id)) {
+          errores.push({
+            tipo: "Semántico",
+            descripcion: `Función ${instr.id} ya declarada`
+          });
+          return;
+        }
+        contextoGlobal.tablaSimbolos.set(instr.id, { tipo: "FUNCION", tipoRetorno: instr.tipoRetorno, sentencias: instr.sentencias, parametros: instr.parametros });
+      break;
+
+      case 'RETORNAR':
+        console.log("Retorno todavía no listo", instr.valor);
+      break;
+
       default:
         errores.push({
           tipo: "Sintáctico",

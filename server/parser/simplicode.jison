@@ -4,6 +4,7 @@
 //PALABRAS RESERVADAS
 "ingresar"                    return 'INGRESAR';
 "como"                        return 'COMO';
+"con"                         return 'CON';
 "con valor"                   return 'CONVALOR';
 "entero"                      return 'TIPO_ENTERO';
 "Entero"                      return 'TIPO_ENTERO';
@@ -23,7 +24,14 @@
 "verdadero"                   return 'VERDADERO';
 "falso"                      return 'FALSO';
 "Lista"                     return 'LISTA';
+"inc"                        return 'INC'; 
+"funcion"                    return 'FUNCION';
 "objeto"                    return 'OBJETO';
+"metodo"                    return 'METODO';
+"procedimiento"              return 'PROCEDIMIENTO';
+"parametros"                return 'PARAMETROS';
+"retornar"                 return 'RETORNAR';   
+"ejecutar"                  return 'EJECUTAR';
 \"[^"]*\"                     return 'CADENA';
 //IDENTIFICADORES
 [a-zA-Z_][a-zA-Z0-9_]*        return 'ID';
@@ -111,6 +119,18 @@ instruccion
         { $$ = $1; }
     | flujos
         { $$ = $1; }
+    | cambio
+        { $$ = $1; }
+    | funcion
+        { $$ = $1; }
+    | procedimiento
+        { $$ = $1; }
+    | 'EJECUTAR' 'ID' '('  ')'
+        { $$ = { tipo: 'LLAMAR_PROCEDIMIENTO', id: $2 }; }
+    | 'EJECUTAR' 'ID' '(' lista ')'
+        { $$ = { tipo: 'LLAMAR_PROCEDIMIENTO', id: $2, parametros: $4.elementos }; }
+    | 'RETORNAR' expresion
+        { $$ = { tipo: 'RETORNAR', valor: $2 }; }
     ;
 
 def_objeto
@@ -152,6 +172,41 @@ si
         { console.log("si ", $2, $4);
             $$ = { tipo: 'SI', condicion: $2, sentencias: $4 }; }
 ;
+
+cambio
+    : incremento 
+    { $$ = $1; }    
+;
+
+incremento
+    : 'INC' '(' 'ID' ')'
+        {$$ = { tipo: 'INCREMENTO', id: $3 }; }
+    | 'ID' '+' '+'
+        { $$ = { tipo: 'INCREMENTO', id: $1 }; }
+;
+
+procedimiento 
+    : 'PROCEDIMIENTO' 'ID' sentencias 'FIN' 'PROCEDIMIENTO'
+        { console.log("procedimiento", $2, $3);
+            $$ = { tipo: 'DEFINIR_PROCEDIMIENTO', id: $2, sentencias: $3 }; }
+    | 'PROCEDIMIENTO' 'ID' 'CON' 'PARAMETROS' '(' lista_parametros ')' sentencias 'FIN' 'PROCEDIMIENTO'
+        { $$ = { tipo: 'DEFINIR_PROCEDIMIENTO', id: $2, parametros: $6, sentencias: $8 }; }
+;
+
+funcion 
+    : 'FUNCION' 'ID' tipo sentencias 'FIN' 'FUNCION'
+        { console.log("funcion", $2, $3, $4);
+            $$ = { tipo: 'DEFINIR_FUNCION', id: $2, tipoRetorno: $3, sentencias: $4 }; }
+    | 'FUNCION' 'ID' tipo 'CON' 'PARAMETROS' '(' lista_parametros ')'  sentencias 'FIN' 'FUNCION'
+        { $$ = { tipo: 'DEFINIR_FUNCION', id: $2, tipoRetorno: $3, parametros: $6, sentencias: $10 }; }
+;
+
+lista_parametros
+    : 'ID' tipo ',' lista_parametros
+        { $$ = [{ id: $1, tipo: $2 }].concat($4); }
+    | 'ID' tipo
+        { $$ = [{ id: $1, tipo: $2 }]; }
+    ;
 
 ingresar_lista
     : 'INGRESAR' 'LISTA' '(' expresion ',' 'TIPO_ENTERO' ')' 'ID' 'ASIGNAR'  '(' lista ')'
@@ -199,6 +254,13 @@ expresion
         { $$ = $1; }
     | booleano
         { $$ = $1; }
+    | 'ID' '(' ')'
+        { $$ = { tipo: 'LLAMAR_FUNCION', id: $1 }; }
+    | 'ID' '(' lista ')'
+        { $$ = { tipo: 'LLAMAR_FUNCION', id: $1, parametros: $3.elementos }; }
+    | '(' lista ')'
+        { $$ = { tipo: 'LISTA', elementos: $2.elementos };  }
+    
     ;
 
 booleano 

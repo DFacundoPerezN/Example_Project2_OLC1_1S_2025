@@ -65,6 +65,15 @@ function evaluar(expr, contexto) {
       case "VALOR_OBJETO":
         const objeto = tablaSimbolos.get(expr.id).valor;
         return evaluar(objeto[expr.atributo], contexto);
+
+      case "LISTA":
+        if(expr.elementos.length !== 1){
+          errores.push({
+            tipo: "Semántico",
+            descripcion: `Intentando operar una lista con más de un elemento`
+          });
+        }
+        return evaluar(expr.elementos[0], contexto);
         
       default:
         errores.push({
